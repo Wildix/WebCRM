@@ -1,0 +1,71 @@
+#WildixInteractionPopup{
+	position: fixed;
+    bottom: 10px;
+    z-index: 15000001;
+    left: 0px;
+}
+
+#WildixInteractionPopup .callsView{
+	float: left;
+	position: relative;
+}
+
+#WildixInteractionPopup .btnToogleCallsView{
+	padding: 10px;
+	padding-bottom: 20px;
+	padding-top: 0px;
+	cursor: pointer;
+}
+
+#WildixInteractionPopup .call{
+    background: #FFFFFF;
+    float: left;
+	min-width: 180px;
+	margin: 0px;
+	margin-left: 10px;
+	top: initial;
+    left: initial;
+    width: initial;
+}
+
+
+#WildixInteractionPopup .call{
+
+}
+
+#WildixInteractionPopup .call .name{
+   	max-width: 200px;
+}
+
+
+
+#WildixInteractionPopup .call .modal-footer{
+	padding: 10px;
+	padding-top: 0px;
+}
+#WildixInteractionPopup .call .modal-footer .btn{
+	margin-left: 0px;
+	margin-top: 10px;
+}
+
+#WildixInteractionPopup .call .crmActions button{
+	clear: both;
+    float: left;
+    width: 100%;
+}
+
+
+
+
+a.phoneNumber{
+	text-decoration: underline;
+
+    background-image: url("/layouts/vlayout/skins/images/phone.png");
+    background-repeat: no-repeat;
+    padding-left: 15px;
+    background-position-y: 1px;
+}
+
+a.phoneNumber:hover{
+	text-decoration: none;
+}
