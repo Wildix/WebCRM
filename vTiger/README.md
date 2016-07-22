@@ -20,7 +20,7 @@ add to template include
 file
 layouts/vlayout/modules/Vtiger/Header.tpl
 after line
-* ADD <script> INCLUDES in JSResources.tpl - for better performance *}
+ADD <script> INCLUDES in JSResources.tpl - for better performance
 add
 <link rel="stylesheet" type="text/css" href="/WebCRM/vTiger/vTiger.css">
 <script src="/WebCRM/Wildix.Interaction.js"></script>
