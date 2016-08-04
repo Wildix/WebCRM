@@ -60,7 +60,7 @@
 a.phoneNumber{
 	text-decoration: underline;
 
-    background-image: url("/layouts/vlayout/skins/images/phone.png");
+    background-image: url("../../layouts/vlayout/skins/images/phone.png");
     background-repeat: no-repeat;
     padding-left: 15px;
     background-position-y: 1px;
