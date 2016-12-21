@@ -199,10 +199,9 @@ vTiger = (function () {
     	}
     }
 
-
-
     function onCall(event){
-    	//console.log('onCall', event);
+        var date = new Date().toJSON().slice(0,10);
+        //console.log('onCall', event);
     	if(event.type == 'new' || event.type == 'restore'){
     		var calls = event.call;
     		if(!(calls instanceof Array)){
@@ -212,13 +211,75 @@ vTiger = (function () {
     		for(var i=0; i < calls.length; i++){
     			callList[calls[i].channel] = calls[i];
         		addPopup(calls[i]);
+
+                if(event.type == 'new') {
+                console.log('Call started: ', calls[i])
+                // Call history
+                AppConnector.request({
+                    url: "WebCRM/CallHistoryService.php",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        operation:'query',
+                        sessionName: sessionName,
+                        query: 'INSERT',
+                        callchannel: calls[i].channel,
+                        direction: calls[i].direction,
+                        callstatus: calls[i].causeText,
+                        callexitcode: calls[i].causeCode,
+                        customernumber: calls[i].number,
+                        calluid: calls[i].uid
+                    }
+                });
+                }
+                if(event.type == 'restore') {
+                console.log('Call restored: ', calls[i])
+                // Call history
+                AppConnector.request({
+                    url: "WebCRM/CallHistoryService.php",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        operation:'query',
+                        sessionName: sessionName,
+                        query: 'RESTORE',
+                        callchannel: calls[i].channel, //event.call.channel,
+                        direction: calls[i].direction, //event.call.direction,
+                        callstatus: calls[i].causeText, //event.call.causeText,
+                        callexitcode:  calls[i].causeCode, //event.call.causeCode,
+                        customernumber: calls[i].number, //event.call.number,
+                        calluid: calls[i].uid, //event.call.uid,
+                        callid: calls[i].id,
+                        callduration: calls[i].duration,
+                        callstate: calls[i].state
+                    }
+                });
+                }
     		}
     	}else if(event.type == 'remove'){
-
-    		if(callList.hasOwnProperty(event.call.channel)){
-    			delete callList[event.call.channel];
+            if(callList.hasOwnProperty(event.call.channel)){
+                delete callList[event.call.channel];
     			removePopup(event.call.channel);
-    		}
+            }
+            console.log('Call finished: ' + event.call.channel)
+            //Call history
+            AppConnector.request({
+                url: "WebCRM/CallHistoryService.php",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    operation:'query',
+                    sessionName: sessionName,
+                    query: 'FINISH',
+                    callchannel: event.call.channel,
+                    direction: event.call.direction,
+                    callstatus: event.call.causeText,
+                    callexitcode: event.call.causeCode,
+                    customernumber: event.call.number,
+                    calluid: event.call.uid
+                }
+            });
+
     	}else if(event.type == 'update'){
     		var popup = $('#WildixInteractionPopup .call[channel="'+event.call.channel+'"]');
     		popup.find('.name h4').html(event.call.name);
