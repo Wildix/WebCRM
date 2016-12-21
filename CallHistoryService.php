@@ -3,7 +3,7 @@
     $path = ( dirname(__DIR__) );
     set_include_path(get_include_path() . PATH_SEPARATOR . $path);
 
-	require_once('config.php');
+    require_once('config.php');
     /**
     * URL Verfication - Required to overcome Apache mis-configuration and leading to shared setup mode.
     */
@@ -11,33 +11,33 @@
         include_once('config_override.php');
     }
 
-	require_once('include/Webservices/Utils.php');
-	require_once('include/Webservices/State.php');
-	require_once('include/Webservices/OperationManager.php');
-	require_once('include/Webservices/SessionManager.php');
-	require_once('include/Zend/Json.php');
+    require_once('include/Webservices/Utils.php');
+    require_once('include/Webservices/State.php');
+    require_once('include/Webservices/OperationManager.php');
+    require_once('include/Webservices/SessionManager.php');
+    require_once('include/Zend/Json.php');
     require_once('include/database/PearDatabase.php');
 
-	function getRequestParamsArrayForOperation($operation){
-		global $operationInput;
-		return $operationInput[$operation];
-	}
+    function getRequestParamsArrayForOperation($operation){
+        global $operationInput;
+        return $operationInput[$operation];
+    }
 
-	function setResponseHeaders() {
-		header('Content-type: application/json');
-	}
+    function setResponseHeaders() {
+        header('Content-type: application/json');
+    }
 
-	function writeErrorOutput($operationManager, $error){
+    function writeErrorOutput($operationManager, $error){
 
-		setResponseHeaders();
-		$state = new State();
-		$state->success = false;
-		$state->error = $error;
-		unset($state->result);
-		$output = $operationManager->encode($state);
-		echo $output;
+        setResponseHeaders();
+        $state = new State();
+        $state->success = false;
+        $state->error = $error;
+        unset($state->result);
+        $output = $operationManager->encode($state);
+        echo $output;
 
-	}
+    }
 
     function getContactID($phone){
         $sql = "SELECT contactid FROM vtiger_contactdetails WHERE phone=". $phone . " LIMIT 1";
@@ -63,52 +63,52 @@
         return $value;
     }
 
-	$operation = vtws_getParameter($_REQUEST, "operation");
-	$operation = strtolower($operation);
-	$format = vtws_getParameter($_REQUEST, "format","json");
-	$sessionId = vtws_getParameter($_REQUEST, "sessionName");
+    $operation = vtws_getParameter($_REQUEST, "operation");
+    $operation = strtolower($operation);
+    $format = vtws_getParameter($_REQUEST, "format","json");
+    $sessionId = vtws_getParameter($_REQUEST, "sessionName");
 
-	$sessionManager = new SessionManager();
-	$operationManager = new OperationManager($adb,$operation,$format,$sessionManager);
+    $sessionManager = new SessionManager();
+    $operationManager = new OperationManager($adb,$operation,$format,$sessionManager);
 
-	try{
+    try{
 
         if(!$sessionId || strcasecmp($sessionId, "null")===0){
-			$sessionId = null;
-		}
+            $sessionId = null;
+        }
 
         $input = $operationManager->getOperationInput();
-		$adoptSession = false;
-		if(strcasecmp($operation, "extendsession")===0){
-			if(isset($input['operation'])){
-				// Workaround fix for PHP 5.3.x: $_REQUEST doesn't have PHPSESSID
-				if(isset($_REQUEST['PHPSESSID'])) {
-					$sessionId = vtws_getParameter($_REQUEST, "PHPSESSID");
-				} else {
-					// NOTE: Need to evaluate for possible security issues
-					$sessionId = vtws_getParameter($_COOKIE, "PHPSESSID");
-				}
-				// END
-				$adoptSession = true;
-			}else{
-				writeErrorOutput($operationManager, new WebServiceException(WebServiceErrorCode::$AUTHREQUIRED, "Authencation required"));
-				return;
-			}
-		}
+        $adoptSession = false;
+        if(strcasecmp($operation, "extendsession")===0){
+            if(isset($input['operation'])){
+                // Workaround fix for PHP 5.3.x: $_REQUEST doesn't have PHPSESSID
+                if(isset($_REQUEST['PHPSESSID'])) {
+                    $sessionId = vtws_getParameter($_REQUEST, "PHPSESSID");
+                } else {
+                    // NOTE: Need to evaluate for possible security issues
+                    $sessionId = vtws_getParameter($_COOKIE, "PHPSESSID");
+                }
+                // END
+                $adoptSession = true;
+            }else{
+                writeErrorOutput($operationManager, new WebServiceException(WebServiceErrorCode::$AUTHREQUIRED, "Authencation required"));
+                return;
+            }
+        }
 
         $sid = $sessionManager->startSession($sessionId,$adoptSession);
 
-		if(!$sessionId && !$operationManager->isPreLoginOperation()){
-			writeErrorOutput($operationManager,new WebServiceException(WebServiceErrorCode::$AUTHREQUIRED, "Authencation required"));
-			return;
-		}
+        if(!$sessionId && !$operationManager->isPreLoginOperation()){
+            writeErrorOutput($operationManager,new WebServiceException(WebServiceErrorCode::$AUTHREQUIRED, "Authencation required"));
+            return;
+        }
 
-		if(!$sid){
-			writeErrorOutput($operationManager, $sessionManager->getError());
-			return;
-		}
+        if(!$sid){
+            writeErrorOutput($operationManager, $sessionManager->getError());
+            return;
+        }
 
-		$userid = $sessionManager->get("authenticatedUserId");
+        $userid = $sessionManager->get("authenticatedUserId");
 
         if(!$userid){
             writeErrorOutput($operationManager,new WebServiceException(WebServiceErrorCode::$AUTHREQUIRED, "Authencation required"));
@@ -236,9 +236,9 @@
 
         }
 
-	}catch(WebServiceException $e){
-		writeErrorOutput($operationManager,$e);
-	}catch(Exception $e){
-		writeErrorOutput($operationManager,
-			new WebServiceException(WebServiceErrorCode::$INTERNALERROR, "Unknown Error while processing request"));
-	}
+    }catch(WebServiceException $e){
+        writeErrorOutput($operationManager,$e);
+    }catch(Exception $e){
+        writeErrorOutput($operationManager,
+            new WebServiceException(WebServiceErrorCode::$INTERNALERROR, "Unknown Error while processing request"));
+    }
