@@ -196,9 +196,9 @@
         function newRecord(){
 
             // use variables from outside the function
-            global $adb, $pbxmanagerid, $timeOfCall, $getCallDuration, $getCallDestinationType, $getCallstate, $direction, $callstatus, $starttime, $endtime, $totalduration, $billduration, $recordingurl, $sourceuuid, $gateway, $customer, $user, $customernumber, $customertype;
+            global $adb, $pbxmanagerid, $timeOfCall, $getCallDuration, $getCallDestinationType, $direction, $callstatus, $starttime, $endtime, $totalduration, $billduration, $recordingurl, $sourceuuid, $gateway, $customer, $user, $customernumber, $customertype;
 
-            if ($getCallDestinationType == 'service' OR $getCallDestinationType == 'local'){
+            if (empty($getCallDestinationType) OR $getCallDestinationType == 'service' OR $getCallDestinationType == 'local'){
                 return;
             }
 
@@ -227,6 +227,7 @@
 
         if ($_query === 'NEW') {
             syslog(LOG_INFO, "CallHistoryService: New call performed.");
+            newRecord();
 
         } elseif ($_query === 'REMOVE') {
             syslog(LOG_INFO, "CallHistoryService: Call finished.");
@@ -238,8 +239,10 @@
             } else {
                 $getTotalduration = 0;
             }
-            $sql = "UPDATE vtiger_pbxmanager SET callstatus=\"" . $callstatus ."\", endtime='" .$endtime . "', totalduration='" .$getTotalduration ."', billduration='" .$getTotalduration . "' WHERE sourceuuid='" .$sourceuuid. "'";
-            $adb->query($sql);
+            if ( isset($sourceuuid) && isCallPresentInCDR($sourceuuid)) {
+                $sql = "UPDATE vtiger_pbxmanager SET callstatus=\"" . $callstatus ."\", endtime='" .$endtime . "', totalduration='" .$getTotalduration ."', billduration='" .$getTotalduration . "' WHERE sourceuuid='" .$sourceuuid. "'";
+                $adb->query($sql);
+            }
 
         } elseif ($_query === 'RESTORE') {
             syslog(LOG_INFO, "CallHistoryService: Call restored.");
