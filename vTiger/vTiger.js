@@ -211,55 +211,17 @@ vTiger = (function () {
     			callList[calls[i].channel] = calls[i];
         		addPopup(calls[i]);
 
-                if(event.type == 'new') {
-                    console.log('Call started: ', calls[i])
-                    // Call history
-                    AppConnector.request({
-                        url: "WebCRM/CallHistoryService.php",
-                        type: "GET",
-                        dataType: "json",
-                        data: {
-                            operation:'query',
-                            sessionName: sessionName,
-                            query: event.type.toUpperCase(),
-                            call: calls[i]
-                        }
-                    });
-                }
-                if(event.type == 'restore') {
-                    console.log('Call restored: ', calls[i])
-                    // Call history
-                    AppConnector.request({
-                        url: "WebCRM/CallHistoryService.php",
-                        type: "GET",
-                        dataType: "json",
-                        data: {
-                            operation:'query',
-                            sessionName: sessionName,
-                            query: event.type.toUpperCase(),
-                            call: calls[i]
-                        }
-                    });
-                }
+                //Call history
+                updateHistory(calls[i], event.type);
     		}
     	}else if(event.type == 'remove'){
             if(callList.hasOwnProperty(event.call.channel)){
                 delete callList[event.call.channel];
     			removePopup(event.call.channel);
             }
-            console.log('Call finished: ' + event.call.causeCode)
+
             //Call history
-            AppConnector.request({
-                url: "WebCRM/CallHistoryService.php",
-                type: "GET",
-                dataType: "json",
-                data: {
-                    operation:'query',
-                    sessionName: sessionName,
-                    query: event.type.toUpperCase(),
-                    call: event.call
-                }
-            });
+            updateHistory(event.call, event.type);
 
     	}else if(event.type == 'update'){
     		var popup = $('#WildixInteractionPopup .call[channel="'+event.call.channel+'"]');
@@ -267,19 +229,8 @@ vTiger = (function () {
     		popup.find('.number').html(event.call.number);
     		popup.attr('number', event.call.number);
 
-            console.log('Call updated: ', event.call);
             //Call history
-            AppConnector.request({
-                url: "WebCRM/CallHistoryService.php",
-                type: "GET",
-                dataType: "json",
-                data: {
-                    operation:'query',
-                    sessionName: sessionName,
-                    query: event.type.toUpperCase(),
-                    call: event.call
-                }
-            });
+            updateHistory(event.call, event.type);
     	}
 
     	checkToogleBtn();
@@ -316,6 +267,42 @@ vTiger = (function () {
         }
     }
 
+    var arrTimeout = {};
+
+    function updateHistory(call, operation){
+        var timeout = 2000;
+        var divider = 1;
+        if(arrTimeout[call.channel] && arrTimeout[call.channel].timer){
+            clearTimeout(arrTimeout[call.channel].timer);
+            arrTimeout[call.channel].timer = null;
+
+            divider = arrTimeout[call.channel].divider;
+            divider++;
+        }
+
+        arrTimeout[call.channel] = {
+            timer: setTimeout(function(){
+                delete arrTimeout[call.channel];
+
+                //Call history
+                console.log('Call operation: ', operation);
+                console.log('Call data: ', call);
+
+                AppConnector.request({
+                    url: "WebCRM/CallHistoryService.php",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        operation:'query',
+                        sessionName: sessionName,
+                        query: operation.toUpperCase(),
+                        call: call
+                    }
+                });
+            }, Math.round(timeout / divider)),
+            divider: divider
+        }
+    }
 
     function onClickToogleBtn(event){
     	if(visible){
