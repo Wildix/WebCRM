@@ -200,7 +200,6 @@ vTiger = (function () {
     }
 
     function onCall(event){
-        var date = new Date().toJSON().slice(0,10);
         //console.log('onCall', event);
     	if(event.type == 'new' || event.type == 'restore'){
     		var calls = event.call;
@@ -213,47 +212,34 @@ vTiger = (function () {
         		addPopup(calls[i]);
 
                 if(event.type == 'new') {
-                console.log('Call started: ', calls[i])
-                // Call history
-                AppConnector.request({
-                    url: "WebCRM/CallHistoryService.php",
-                    type: "GET",
-                    dataType: "json",
-                    data: {
-                        operation:'query',
-                        sessionName: sessionName,
-                        query: 'INSERT',
-                        callchannel: calls[i].channel,
-                        direction: calls[i].direction,
-                        callstatus: calls[i].causeText,
-                        callexitcode: calls[i].causeCode,
-                        customernumber: calls[i].number,
-                        calluid: calls[i].uid
-                    }
-                });
+                    console.log('Call started: ', calls[i])
+                    // Call history
+                    AppConnector.request({
+                        url: "WebCRM/CallHistoryService.php",
+                        type: "GET",
+                        dataType: "json",
+                        data: {
+                            operation:'query',
+                            sessionName: sessionName,
+                            query: event.type.toUpperCase(),
+                            call: calls[i]
+                        }
+                    });
                 }
                 if(event.type == 'restore') {
-                console.log('Call restored: ', calls[i])
-                // Call history
-                AppConnector.request({
-                    url: "WebCRM/CallHistoryService.php",
-                    type: "GET",
-                    dataType: "json",
-                    data: {
-                        operation:'query',
-                        sessionName: sessionName,
-                        query: 'RESTORE',
-                        callchannel: calls[i].channel, //event.call.channel,
-                        direction: calls[i].direction, //event.call.direction,
-                        callstatus: calls[i].causeText, //event.call.causeText,
-                        callexitcode:  calls[i].causeCode, //event.call.causeCode,
-                        customernumber: calls[i].number, //event.call.number,
-                        calluid: calls[i].uid, //event.call.uid,
-                        callid: calls[i].id,
-                        callduration: calls[i].duration,
-                        callstate: calls[i].state
-                    }
-                });
+                    console.log('Call restored: ', calls[i])
+                    // Call history
+                    AppConnector.request({
+                        url: "WebCRM/CallHistoryService.php",
+                        type: "GET",
+                        dataType: "json",
+                        data: {
+                            operation:'query',
+                            sessionName: sessionName,
+                            query: event.type.toUpperCase(),
+                            call: calls[i]
+                        }
+                    });
                 }
     		}
     	}else if(event.type == 'remove'){
@@ -261,7 +247,7 @@ vTiger = (function () {
                 delete callList[event.call.channel];
     			removePopup(event.call.channel);
             }
-            console.log('Call finished: ' + event.call.channel)
+            console.log('Call finished: ' + event.call.causeCode)
             //Call history
             AppConnector.request({
                 url: "WebCRM/CallHistoryService.php",
@@ -270,13 +256,8 @@ vTiger = (function () {
                 data: {
                     operation:'query',
                     sessionName: sessionName,
-                    query: 'FINISH',
-                    callchannel: event.call.channel,
-                    direction: event.call.direction,
-                    callstatus: event.call.causeText,
-                    callexitcode: event.call.causeCode,
-                    customernumber: event.call.number,
-                    calluid: event.call.uid
+                    query: event.type.toUpperCase(),
+                    call: event.call
                 }
             });
 
@@ -285,6 +266,20 @@ vTiger = (function () {
     		popup.find('.name h4').html(event.call.name);
     		popup.find('.number').html(event.call.number);
     		popup.attr('number', event.call.number);
+
+            console.log('Call updated: ', event.call);
+            //Call history
+            AppConnector.request({
+                url: "WebCRM/CallHistoryService.php",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    operation:'query',
+                    sessionName: sessionName,
+                    query: event.type.toUpperCase(),
+                    call: event.call
+                }
+            });
     	}
 
     	checkToogleBtn();
