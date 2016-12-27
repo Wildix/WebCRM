@@ -119,14 +119,10 @@
         $adb = PearDatabase::getInstance();
 
         $_query = $input['query'];
+        //get array of call parameters
+        $callParams = vtws_getParameter($_REQUEST, "call");
 
-        //Increase counter only in case new INSERT
-        if ($_query === 'INSERT') {
-            $crmID = $adb->getUniqueID('vtiger_crmentity');
-        } else {
-            $crmID = null;
-        }
-
+        $crmID = null;
         $timeOfCall = date('Y-m-d H:i:s');
         $getTotalduration = (strtotime($endtime) - strtotime($starttime));
 
@@ -134,22 +130,23 @@
         // 1. call.uid from AJAX
         // OR
         // 2. md5 (channel + current date (yyyy-mm-dd) )
-        $UUID = vtws_getParameter($_REQUEST, "calluid");
+        $UUID = $callParams['uid'];
         if (!isset($UUID)) {
             $fix = date('Y-m-d');
-            $UUID = md5(vtws_getParameter($_REQUEST, "callchannel") . $fix);
+            $UUID = md5($callParams['channel'] . $fix);
         }
 
-        $getDirection = vtws_getParameter($_REQUEST, "direction");
-        $getCallstatus = vtws_getParameter($_REQUEST, "callstatus");
-        $getCallExitCode = vtws_getParameter($_REQUEST, "callexitcode");
+        $getDirection = $callParams['direction'];
+        $getCallstatus = $callParams['causeText'];
+        $getCallExitCode = $callParams['causeCode'];
 
-        $getCallstate = vtws_getParameter($_REQUEST, "callstate");
-        $getCallDuration = vtws_getParameter($_REQUEST, "callduration");
+        $getCallstate = $callParams['state'];
+        $getCallDuration = $callParams['duration'];
+        $getCallDestinationType = $callParams['destinationType'];
 
-        $getCallId = vtws_getParameter($_REQUEST, "callid");
+        $getCallId = $callParams['id'];
 
-        $getCustomernumber = vtws_getParameter($_REQUEST, "customernumber");
+        $getCustomernumber = $callParams['number'];
         $getCustomer = getContactID($getCustomernumber);
 
         //Get entries for mysql query
@@ -160,7 +157,7 @@
         $endtime = $timeOfCall;
         $totalduration = $getTotalduration;
         $billduration = $totalduration;
-        $recordingurl = "http://127.0.0.1/call?" . $UUID;
+        $recordingurl = null;
         $sourceuuid = $UUID;
         $gateway = 'PBXManager';
         $customer = $getCustomer;
@@ -180,27 +177,8 @@
             $callstatus = 'completed';
         }
 
-        if ($_query === 'INSERT') {
-            syslog(LOG_INFO, "CallHistoryService: New call performed");
-            $query = "INSERT INTO `vtiger_crmentity` (crmid,smcreatorid,smownerid,modifiedby,setype,description,createdtime,modifiedtime,viewedtime,status,version,presence,deleted,label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-            $params = array($pbxmanagerid, $user, $user, 0, $gateway, "", $timeOfCall, $timeOfCall, NULL, NULL, 0, 1, 0, $customernumber);
-            $adb->pquery($query, $params);
-
-            $sql = "INSERT INTO `vtiger_pbxmanager` (pbxmanagerid,direction,callstatus,starttime,endtime,totalduration,billduration,recordingurl,sourceuuid,gateway,customer,user,customernumber,customertype) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-            $params = array($pbxmanagerid, $direction, $callstatus, $starttime, $endtime, $totalduration, $billduration, $recordingurl, $sourceuuid, $gateway, $customer, $user, $customernumber, $customertype);
-            $adb->pquery($sql, $params);
-
-        } elseif ($_query === 'FINISH') {
-            syslog(LOG_INFO, "CallHistoryService: Call finished.");
-
-            $callStartTime = getCAllStartTime($sourceuuid);
-            $getTotalduration = (strtotime($endtime) - strtotime($callStartTime));
-
-            $sql = "UPDATE vtiger_pbxmanager SET callstatus=\"" . $callstatus ."\", endtime='" .$endtime . "', totalduration='" .$getTotalduration ."', billduration='" .$getTotalduration . "' WHERE sourceuuid='" .$sourceuuid. "'";
-            $adb->query($sql);
-
-        } elseif ($_query === 'RESTORE') {
-
+        function isCallPresentInCDR($sourceuuid){
+            global $adb;
             $count = 0;
             //Check if call already in CDR
             $sql = "SELECT count(*) as c  FROM `vtiger_pbxmanager` WHERE sourceuuid='" .$sourceuuid. "' LIMIT 1";
@@ -209,11 +187,24 @@
             if( isset($data->fields) && isset($data->fields['c']) ) {
                 $count = $data->fields['c'];
             }
+            if ($count != 0) {
+                return true;
+            }
+            return false;
+        }
 
-            if ($count == 0 AND isset($sourceuuid)) {
+        function newRecord(){
 
+            // use variables from outside the function
+            global $adb, $pbxmanagerid, $timeOfCall, $getCallDuration, $getCallDestinationType, $getCallstate, $direction, $callstatus, $starttime, $endtime, $totalduration, $billduration, $recordingurl, $sourceuuid, $gateway, $customer, $user, $customernumber, $customertype;
+
+            if ($getCallDestinationType == 'service' OR $getCallDestinationType == 'local'){
+                return;
+            }
+
+            if ( isset($sourceuuid) && !isCallPresentInCDR($sourceuuid) ) {
+                //generate uniq id
                 $pbxmanagerid = $adb->getUniqueID('vtiger_crmentity');
-                syslog(LOG_INFO, "CallHistoryService: Call restored.");
 
                 //Calculate start of the call
                 if (!isset($getCallDuration)){
@@ -221,19 +212,52 @@
                 }
                 $currentTime = strtotime($timeOfCall);
                 $callStarted = ($currentTime - $getCallDuration);
-
                 $starttime = date('Y-m-d H:i:s', $callStarted);
 
                 //Insert new record
                 $query = "INSERT INTO `vtiger_crmentity` (crmid,smcreatorid,smownerid,modifiedby,setype,description,createdtime,modifiedtime,viewedtime,status,version,presence,deleted,label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-                $params =array($pbxmanagerid, $user, $user, 0, $gateway, "", $starttime, $starttime, NULL, NULL, 0, 1, 0, $customernumber);
+                $params = array($pbxmanagerid, $user, $user, 0, $gateway, "", $starttime, $starttime, NULL, NULL, 0, 1, 0, $customernumber);
                 $adb->pquery($query, $params);
 
                 $sql = "INSERT INTO `vtiger_pbxmanager` (pbxmanagerid,direction,callstatus,starttime,endtime,totalduration,billduration,recordingurl,sourceuuid,gateway,customer,user,customernumber,customertype) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 $params = array($pbxmanagerid, $direction, $callstatus, $starttime, $endtime, $totalduration, $billduration, $recordingurl, $sourceuuid, $gateway, $customer, $user, $customernumber, $customertype);
                 $adb->pquery($sql, $params);
             }
+        }
 
+        if ($_query === 'NEW') {
+            syslog(LOG_INFO, "CallHistoryService: New call performed.");
+
+        } elseif ($_query === 'REMOVE') {
+            syslog(LOG_INFO, "CallHistoryService: Call finished.");
+
+            //calculate call duration only if call was answered and ended with cause code 16
+            if ($getCallExitCode == '16'){
+                $callStartTime = getCAllStartTime($sourceuuid);
+                $getTotalduration = (strtotime($endtime) - strtotime($callStartTime));
+            } else {
+                $getTotalduration = 0;
+            }
+            $sql = "UPDATE vtiger_pbxmanager SET callstatus=\"" . $callstatus ."\", endtime='" .$endtime . "', totalduration='" .$getTotalduration ."', billduration='" .$getTotalduration . "' WHERE sourceuuid='" .$sourceuuid. "'";
+            $adb->query($sql);
+
+        } elseif ($_query === 'RESTORE') {
+            syslog(LOG_INFO, "CallHistoryService: Call restored.");
+            newRecord();
+
+        } elseif ($_query === 'UPDATE'){
+
+            if ( isset($sourceuuid) && isCallPresentInCDR($sourceuuid)) {
+
+                syslog(LOG_INFO, "CallHistoryService: Call updated.");
+                $sql = "UPDATE vtiger_pbxmanager SET callstatus='" . $callstatus ."', customer='" . $customer . "', customernumber='" . $customernumber . "', customertype='" .$customertype . "' WHERE sourceuuid='" .$sourceuuid. "'";
+                $adb->query($sql);
+
+            } else {
+
+                syslog(LOG_INFO, "CallHistoryService: Call updated with new record.");
+                newRecord();
+            }
         }
 
     }catch(WebServiceException $e){
