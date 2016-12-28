@@ -1,12 +1,12 @@
 vTiger = (function () {
 //https://vtiger.wildix.com/layouts/vlayout/skins/images/Call_white.png
 
-	var sessionName = null;
-	var callList = {};
+    var sessionName = null;
+    var callList = {};
 
 
     function bindEvents(){
-    	// if updated content
+        // if updated content
         $(document).on('postajaxready', modifyDOM)
         $('#detailView .fieldValue span[data-field-type="phone"]').closest('.fieldValue').on('Vtiger.Field.Updated', 'input', modifyDOM);
         $('#detailView input[name="phone"]').on('Vtiger.Field.Updated', modifyDOM);
@@ -17,49 +17,49 @@ vTiger = (function () {
     }
 
     function initWildixInteraction(){
-    	Wildix.Interaction.isInitialized(function(isInitialized){
+        Wildix.Interaction.isInitialized(function(isInitialized){
 
-    		bindEvents();
+            bindEvents();
 
-			Wildix.Interaction.getCalls(function(calls){
-				modifyDOM();
+            Wildix.Interaction.getCalls(function(calls){
+                modifyDOM();
 
-				onCall({
-					type: 'restore',
-					call: calls.result.records
-				})
-			});
+                onCall({
+                    type: 'restore',
+                    call: calls.result.records
+                })
+            });
 
-			Wildix.Interaction.on('calls', onCall);
+            Wildix.Interaction.on('calls', onCall);
 
-			$('body').append('<div id="WildixInteractionPopup"><div class="callsView"></div><span class="btnToogleCallsView" style="display:none;"><i class="icon-chevron-left"></i></span></div>')
-		});
+            $('body').append('<div id="WildixInteractionPopup"><div class="callsView"></div><span class="btnToogleCallsView" style="display:none;"><i class="icon-chevron-left"></i></span></div>')
+        });
     }
 
 
     function addPopup(call){
-    	removePopup(call.channel);
-    	getCallActions(call);
+        removePopup(call.channel);
+        getCallActions(call);
 
-    	var html = "" +
-    			"<div class='call modal' number='"+call.number+"' channel='"+call.channel+"' style='position: relative;'>" +
-    				"<div class='header modal-header'><h4>"+((call.direction == 'outgoing')? 'Outgoing call': 'Incoming call')+"</h4></div>" +
-    				"<div class='content modal-body'>" +
-    					"<div class='name'><h4>"+call.name+"</h4></div>" +
-    					"<div class='number'>"+call.number+"</div>" +
-    				"</div>" +
-    				"<div class='crmActions modal-footer'>" +
-						"<button class='btn btn-default' disabled>Lead</button>" +
-						"<button class='btn btn-default' disabled>Contact</button>" +
-					"</div>" +
-    			"</div>";
-    	$('#WildixInteractionPopup .callsView').append(html);
-    	updatePosition();
+        var html = "" +
+                "<div class='call modal' number='"+call.number+"' channel='"+call.channel+"' style='position: relative;'>" +
+                    "<div class='header modal-header'><h4>"+((call.direction == 'outgoing')? 'Outgoing call': 'Incoming call')+"</h4></div>" +
+                    "<div class='content modal-body'>" +
+                        "<div class='name'><h4>"+call.name+"</h4></div>" +
+                        "<div class='number'>"+call.number+"</div>" +
+                    "</div>" +
+                    "<div class='crmActions modal-footer'>" +
+                        "<button class='btn btn-default' disabled>Lead</button>" +
+                        "<button class='btn btn-default' disabled>Contact</button>" +
+                    "</div>" +
+                "</div>";
+        $('#WildixInteractionPopup .callsView').append(html);
+        updatePosition();
     }
 
     function removePopup(channel){
-		$('#WildixInteractionPopup .call[channel="'+channel+'"]').remove();
-		updatePosition();
+        $('#WildixInteractionPopup .call[channel="'+channel+'"]').remove();
+        updatePosition();
     }
 
 
@@ -92,11 +92,11 @@ vTiger = (function () {
     }
 
     function checkToogleBtn(){
-    	if($('#WildixInteractionPopup .call').length > 0){
-    		$('#WildixInteractionPopup .btnToogleCallsView').show();
-    	}else{
-    		$('#WildixInteractionPopup .btnToogleCallsView').hide();
-    	}
+        if($('#WildixInteractionPopup .call').length > 0){
+            $('#WildixInteractionPopup .btnToogleCallsView').show();
+        }else{
+            $('#WildixInteractionPopup .btnToogleCallsView').hide();
+        }
     }
 
     function getCallActions(call, callback){
@@ -121,23 +121,23 @@ vTiger = (function () {
                     id: contact ? contact.id.split('x')[1] : '',
                 });
 
-    			var html = "";
-    			for(var j=0; j < actions.length; j++){
-    				var action = actions[j];
-    				switch (action.type) {
-						case 'createLead':
-						case 'createContact':
-								html += "<button class='btn btn-default' type='"+action.type+"' data-id='"+action.id+"'><i class='icon-plus'></i>&nbsp;"+action.text+"</button>";
-							break;
-						case 'showLead':
-						case 'showContact':
-								html += "<button class='btn btn-default' type='"+action.type+"' data-id='"+action.id+"'><i class='icon-eye-open'></i>&nbsp;"+action.text+"</button>";
-							break;
-						default:
-							break;
-					}
-    			}
-    			$('#WildixInteractionPopup .call[channel="'+call.channel+'"] .crmActions').html(html);
+                var html = "";
+                for(var j=0; j < actions.length; j++){
+                    var action = actions[j];
+                    switch (action.type) {
+                        case 'createLead':
+                        case 'createContact':
+                                html += "<button class='btn btn-default' type='"+action.type+"' data-id='"+action.id+"'><i class='icon-plus'></i>&nbsp;"+action.text+"</button>";
+                            break;
+                        case 'showLead':
+                        case 'showContact':
+                                html += "<button class='btn btn-default' type='"+action.type+"' data-id='"+action.id+"'><i class='icon-eye-open'></i>&nbsp;"+action.text+"</button>";
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                $('#WildixInteractionPopup .call[channel="'+call.channel+'"] .crmActions').html(html);
             }
         }
 
@@ -181,70 +181,77 @@ vTiger = (function () {
 
     var visible = true;
     function updatePosition(){
-    	var left = (($('#WildixInteractionPopup .callsView').width()) * (-1));
-    	if(left == 0){
-			visible = true;
-		}
-    	if(!visible){
-    		$('#WildixInteractionPopup').css({
-    			'left': left
-    		});
-    		$('#WildixInteractionPopup .btnToogleCallsView i').attr('class', 'icon-chevron-right')
-    	}else{
-    		$('#WildixInteractionPopup').css({
-    			left: 0
-    		})
-    		visible = true;
-    		$('#WildixInteractionPopup .btnToogleCallsView i').attr('class', 'icon-chevron-left')
-    	}
+        var left = (($('#WildixInteractionPopup .callsView').width()) * (-1));
+        if(left == 0){
+            visible = true;
+        }
+        if(!visible){
+            $('#WildixInteractionPopup').css({
+                'left': left
+            });
+            $('#WildixInteractionPopup .btnToogleCallsView i').attr('class', 'icon-chevron-right')
+        }else{
+            $('#WildixInteractionPopup').css({
+                left: 0
+            })
+            visible = true;
+            $('#WildixInteractionPopup .btnToogleCallsView i').attr('class', 'icon-chevron-left')
+        }
     }
 
-
-
     function onCall(event){
-    	//console.log('onCall', event);
-    	if(event.type == 'new' || event.type == 'restore'){
-    		var calls = event.call;
-    		if(!(calls instanceof Array)){
-    			calls = [calls];
-    		}
+        //console.log('onCall', event);
+        if(event.type == 'new' || event.type == 'restore'){
+            var calls = event.call;
+            if(!(calls instanceof Array)){
+                calls = [calls];
+            }
 
-    		for(var i=0; i < calls.length; i++){
-    			callList[calls[i].channel] = calls[i];
-        		addPopup(calls[i]);
-    		}
-    	}else if(event.type == 'remove'){
+            for(var i=0; i < calls.length; i++){
+                callList[calls[i].channel] = calls[i];
+                addPopup(calls[i]);
 
-    		if(callList.hasOwnProperty(event.call.channel)){
-    			delete callList[event.call.channel];
-    			removePopup(event.call.channel);
-    		}
-    	}else if(event.type == 'update'){
-    		var popup = $('#WildixInteractionPopup .call[channel="'+event.call.channel+'"]');
-    		popup.find('.name h4').html(event.call.name);
-    		popup.find('.number').html(event.call.number);
-    		popup.attr('number', event.call.number);
-    	}
+                //Call history
+                updateHistory(calls[i], event.type);
+            }
+        }else if(event.type == 'remove'){
+            if(callList.hasOwnProperty(event.call.channel)){
+                delete callList[event.call.channel];
+                removePopup(event.call.channel);
+            }
 
-    	checkToogleBtn();
+            //Call history
+            updateHistory(event.call, event.type);
+
+        }else if(event.type == 'update'){
+            var popup = $('#WildixInteractionPopup .call[channel="'+event.call.channel+'"]');
+            popup.find('.name h4').html(event.call.name);
+            popup.find('.number').html(event.call.number);
+            popup.attr('number', event.call.number);
+
+            //Call history
+            updateHistory(event.call, event.type);
+        }
+
+        checkToogleBtn();
     }
 
     function onClickCallAction(event){
-    	event.stopPropagation();
+        event.stopPropagation();
 
-    	var btn = $(event.target);
+        var btn = $(event.target);
 
-    	var action = btn.attr('type');
-    	var id = btn.attr('data-id');
-    	var channel = btn.closest('.call').attr('channel');
+        var action = btn.attr('type');
+        var id = btn.attr('data-id');
+        var channel = btn.closest('.call').attr('channel');
 
-    	var name = '';
-    	var number = '';
+        var name = '';
+        var number = '';
 
-    	if(callList.hasOwnProperty(channel)){
-    		name = callList[channel].name;
-    		number = callList[channel].number;
-    	}
+        if(callList.hasOwnProperty(channel)){
+            name = callList[channel].name;
+            number = callList[channel].number;
+        }
 
         switch (action) {
             case 'createLead': window.location='?module=Leads&view=Edit&firstname='+name+'&phone='+number+'';
@@ -260,15 +267,48 @@ vTiger = (function () {
         }
     }
 
+    var arrTimeout = {};
+
+    function updateHistory(call, operation){
+        var timeout = 1000;
+        var divider = 1;
+        if(arrTimeout[call.channel] && arrTimeout[call.channel].timer){
+            clearTimeout(arrTimeout[call.channel].timer);
+            arrTimeout[call.channel].timer = null;
+
+            divider = arrTimeout[call.channel].divider;
+            divider++;
+        }
+
+        arrTimeout[call.channel] = {
+            timer: setTimeout(function(){
+                delete arrTimeout[call.channel];
+
+                //Call history
+                AppConnector.request({
+                    url: "WebCRM/vTiger/CallHistoryService.php",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        operation:'query',
+                        sessionName: sessionName,
+                        query: operation.toUpperCase(),
+                        call: call
+                    }
+                });
+            }, Math.round(timeout / divider)),
+            divider: divider
+        }
+    }
 
     function onClickToogleBtn(event){
-    	if(visible){
-    		visible = false;
-    	}else{
-    		visible = true;
-    	}
-    	updatePosition();
-    	checkToogleBtn();
+        if(visible){
+            visible = false;
+        }else{
+            visible = true;
+        }
+        updatePosition();
+        checkToogleBtn();
     }
 
 
@@ -277,19 +317,19 @@ vTiger = (function () {
 
         var phone = $.trim($(event.target).text());
         if(phone != ''){
-        	Wildix.Interaction.call(phone, function(result){
-        		//console.log('call macked: ', result)
-        	});
+            Wildix.Interaction.call(phone, function(result){
+                //console.log('call macked: ', result)
+            });
         }
 
         return false;
     }
 
 
-	return {
-		run: function () {
+    return {
+        run: function () {
 
-        	AppConnector.request({
+            AppConnector.request({
                 url: "webservice.php",
                 type: "POST",
                 dataType: "json",
@@ -298,19 +338,19 @@ vTiger = (function () {
                 }
             }).then(function(data){
                     if(data && data.success == true){
-                    	// if user logged in
-                    	sessionName = data.result.sessionName;
-                    	initWildixInteraction();
+                        // if user logged in
+                        sessionName = data.result.sessionName;
+                        initWildixInteraction();
                     }
                 }
             );
         }
-	}
+    }
 })();
 
 
 $(document).ready(function(){
     if(window.AppConnector){
-    	vTiger.run();
+        vTiger.run();
     }
 });
