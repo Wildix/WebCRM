@@ -270,7 +270,7 @@ vTiger = (function () {
     var arrTimeout = {};
 
     function updateHistory(call, operation){
-        var timeout = 2000;
+        var timeout = 1000;
         var divider = 1;
         if(arrTimeout[call.channel] && arrTimeout[call.channel].timer){
             clearTimeout(arrTimeout[call.channel].timer);
@@ -285,11 +285,8 @@ vTiger = (function () {
                 delete arrTimeout[call.channel];
 
                 //Call history
-                console.log('Call operation: ', operation);
-                console.log('Call data: ', call);
-
                 AppConnector.request({
-                    url: "WebCRM/CallHistoryService.php",
+                    url: "WebCRM/vTiger/CallHistoryService.php",
                     type: "GET",
                     dataType: "json",
                     data: {
