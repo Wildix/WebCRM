@@ -51,6 +51,8 @@ vTiger = (function () {
                     "<div class='crmActions modal-footer'>" +
                         "<button class='btn btn-default' disabled>Lead</button>" +
                         "<button class='btn btn-default' disabled>Contact</button>" +
+                        "<button class='btn btn-default' disabled>Ticket</button>" +
+                        "<button class='btn btn-default' disabled>Tickets</button>" +
                     "</div>" +
                 "</div>";
         $('#WildixInteractionPopup .callsView').append(html);
@@ -112,13 +114,25 @@ vTiger = (function () {
                 actions.push({
                     type: lead ? 'showLead' : 'createLead',
                     text: lead ? 'Show Lead' : 'Add Lead',
-                    id: lead ? lead.id.split('x')[1] : '',
+                    id: lead ? lead.id.split('x')[1] : ''
                 });
 
                 actions.push({
                     type: contact ? 'showContact' : 'createContact',
                     text: contact ? 'Show Contact' : 'Add Contact',
-                    id: contact ? contact.id.split('x')[1] : '',
+                    id: contact ? contact.id.split('x')[1] : ''
+                });
+
+                actions.push({
+                    type: 'createTicket',
+                    text: 'Add Ticket',
+                    id: ''
+                });
+
+                actions.push({
+                    type: contact ? 'showTickets' : 'showAllTickets',
+                    text: contact ? 'Show Tickets' : 'All Tickets',
+                    id: contact ? contact.firstname + ' ' + contact.lastname : ''
                 });
 
                 var html = "";
@@ -127,10 +141,13 @@ vTiger = (function () {
                     switch (action.type) {
                         case 'createLead':
                         case 'createContact':
+                        case 'createTicket':
                                 html += "<button class='btn btn-default' type='"+action.type+"' data-id='"+action.id+"'><i class='icon-plus'></i>&nbsp;"+action.text+"</button>";
                             break;
                         case 'showLead':
                         case 'showContact':
+                        case 'showTickets':
+                        case 'showAllTickets':
                                 html += "<button class='btn btn-default' type='"+action.type+"' data-id='"+action.id+"'><i class='icon-eye-open'></i>&nbsp;"+action.text+"</button>";
                             break;
                         default:
@@ -258,9 +275,15 @@ vTiger = (function () {
                 break;
             case 'createContact': window.location='?module=Contacts&view=Edit&firstname='+name+'&phone='+number+'';
                 break;
+            case 'createTicket': window.location='?module=HelpDesk&view=Edit';
+                break;
             case 'showContact': window.location='?module=Contacts&view=Detail&record='+id+'&mode=showDetailViewByMode&requestMode=full';
                 break;
             case 'showLead': window.location='?module=Leads&view=Detail&record='+id+'&mode=showDetailViewByMode&requestMode=full';
+                break;
+            case 'showTickets': window.location='?module=HelpDesk&page=1&view=List&viewname=13&search_params=[[["contact_id","c","'+id+'"]]]';
+                break;
+            case 'showAllTickets': window.location='?module=HelpDesk&view=List';
                 break;
             default:
                 break;
