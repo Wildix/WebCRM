@@ -46,8 +46,6 @@ comment
 throw new Exception('Illegal request');
 ```
 
-### add to template include
-
 3. modify
 ```
 layouts/vlayout/modules/Vtiger/Header.tpl
