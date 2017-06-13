@@ -1,5 +1,15 @@
 # vTiger
 
+This integration requires a Wildix PBX: https://www.wildix.com/
+
+To start copy the directory WebCRM to your vTiger installation folder.
+
+Insert in Wildix Collaboration the uri to access your vTiger deployment into: Web CRM, (for example: https://mycompany.com/vtiger/).
+
+Make sure that the server provides a valid https certificate to the domain used.
+
+Proceed then applying the following changes to vTiger files in the installation directory.
+
 
 ##File changes
 
