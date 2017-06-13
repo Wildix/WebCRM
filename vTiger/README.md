@@ -11,7 +11,7 @@ Make sure that the server provides a valid https certificate to the domain used.
 Proceed then applying the following changes to vTiger files in the installation directory.
 
 
-##File changes
+## File changes
 
 in file
 
@@ -35,7 +35,7 @@ comment
 throw new Exception('Illegal request');
 ```
 
-###add to template include
+### add to template include
 
 file
 ```
