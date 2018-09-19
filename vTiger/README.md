@@ -9,7 +9,7 @@ This integration requires a Wildix PBX: https://www.wildix.com/
  * call history creation
  * actions from call pop-ups (Add Lead, Show Contact, Open Ticket)
  
- More info here: https://www.wildix.com/wp-content/uploads/2017/02/VTIGER-Integration.pdf
+ More info here: https://drive.google.com/drive/folders/1Se7uSJXV07NlBu-AObJ1aYPiAbE1KpXf?usp=sharing
 
 ## Installation
 
